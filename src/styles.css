@@ -13,6 +13,56 @@
 .top{justify-content:flex-end}.top-spacer{display:none}.dashboard-actions{display:flex;align-items:center;gap:14px;min-width:0}.dashboard-search{width:280px;height:44px;display:flex;align-items:center;gap:9px;padding:0 13px;border:1px solid var(--line);border-radius:7px;background:#fff;color:#7a86a0}.dashboard-search svg{width:18px;height:18px;flex:none}.dashboard-search input{width:100%;border:0;outline:0;background:transparent;font-size:14px;color:var(--ink)}.tools{align-items:center;flex-wrap:nowrap}.tools>.btn{display:inline-flex!important;width:auto!important;min-width:178px;white-space:nowrap;flex:0 0 auto;line-height:1}.tools>.btn svg{flex:none}.auth-shell{height:100vh;min-height:680px;overflow:hidden}.auth-art:before{background:linear-gradient(90deg,rgba(255,255,255,.68) 0%,rgba(255,255,255,.38) 37%,rgba(235,244,255,.08) 65%,rgba(235,244,255,.28) 100%)}.auth-art:after{background:radial-gradient(circle at 12% 12%,rgba(255,255,255,.38),transparent 44%)}.auth-pane{padding-top:16px;padding-bottom:16px}.auth-card{max-height:calc(100vh - 32px);overflow:hidden}.auth-card>.btn.primary{display:flex;width:100%;justify-content:center}.register-card{padding-top:18px;padding-bottom:18px}.register-card .tabs{margin-bottom:14px}.register-card h2{margin-top:2px}.register-card>p{margin-bottom:10px}.register-card .lab{margin-top:8px}.register-card .field{height:42px;margin:5px 0}.register-card .terms{margin:9px 0}.register-card .center{margin-top:12px!important}
 @media(max-width:1120px){.dashboard-search{width:220px}.tools>.btn{min-width:154px}.dashboard-actions{gap:9px}}@media(max-width:850px){.dashboard-search{width:190px}.tools>.btn{min-width:136px;font-size:13px}.title{align-items:flex-start}}@media(max-width:700px){.auth-shell{height:auto;min-height:100vh;overflow:auto}.auth-pane{padding:24px}.auth-card{max-height:none}.register-card .field{height:44px;margin:9px 0}.register-card .lab{margin-top:12px}.dashboard-actions{width:100%;margin-top:16px;justify-content:space-between}.title{display:block}.dashboard-search{width:100%;max-width:none}.tools{justify-content:flex-end}.tools>.btn{min-width:0}.tools>.btn svg{display:none}}
 
+/* Dashboard list-card anatomy mirrors the compact reference card. */
+.cards{grid-auto-rows:270px}
+.list-card{position:relative;padding:20px;border-radius:12px}
+.list-card>div:first-child{height:48px;align-items:flex-start}
+.list-card>div:first-child span{font-size:40px;line-height:1}
+.list-card>div:first-child svg{width:20px;height:20px}
+.list-card h3{font-size:20px;margin:14px 0 3px}
+.list-card p,.list-card small{font-size:14px}
+.list-card .progress{height:10px;margin:20px 0 8px}
+.list-card:first-child .progress i{background:#18ba79!important}
+.list-card footer{position:absolute;right:20px;bottom:18px;left:20px;margin:0}
+.list-card footer em{position:absolute;top:-178px;right:35px;font-size:12px;padding:5px 8px}
+.list-card footer span{display:flex;align-items:center}
+.list-card footer span:after{content:'MK';display:none;place-items:center;width:28px;height:28px;margin-left:-5px;border:2px solid #fff;border-radius:50%;background:#ffd6d7;color:#7b2433;font-size:9px;font-weight:700}
+.list-card:first-child footer span:after{display:grid}
+.list-card footer b{display:grid;place-items:center;width:28px;height:28px;margin-left:-5px;border:2px solid #fff;border-radius:50%;background:#eef1f6;color:#526077;font-size:10px}
+/* Keep the action badge in the header and the people stack in its own bottom row. */
+.list-card footer{position:static}
+.list-card footer em{top:20px;right:48px}
+.list-card footer span{position:absolute;bottom:18px;left:20px}
+/* Stable card footer: avatars and sharing state share one unobstructed bottom row. */
+.list-card{display:flex;flex-direction:column}
+.list-card .progress{flex:none}
+.list-card small{display:block}
+.list-card footer{position:static;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:14px}
+.list-card footer em{position:static;display:inline-block;padding:5px 8px;font-size:12px}
+.list-card footer span{position:static;display:flex;align-items:center}
+.list-card footer span:after{display:none!important}
+/* The footer itself owns the card-bottom placement, keeping both sides contained. */
+.list-card footer{position:absolute!important;right:20px!important;bottom:18px!important;left:20px!important;height:28px;margin:0!important;padding:0!important}
+/* Reserve a distinct footer lane below the completion count. */
+.list-card .progress{margin:14px 0 4px}
+.list-card footer{bottom:8px!important}
+
+/* Account menu readability matches the workspace navigation scale. */
+.auth-message{margin:14px 0 0!important;color:#c5374d!important;font-size:13px!important;line-height:1.45}
+.auth-loading{min-height:100vh;display:grid;place-items:center;background:var(--wash);color:var(--ink);font:600 16px Outfit}
+.auth-card button:disabled{cursor:wait;opacity:.72}
+.modal:has(.split)>.lab:nth-of-type(3),.modal:has(.split)>textarea{display:none}
+.list-tabs button:last-child{display:none}
+.account aside{width:220px;padding:8px}
+.account aside button{gap:10px;padding:11px 10px;font-size:14px;line-height:1.3}
+.account aside svg{width:18px;height:18px}
+
+/* Auth background and glass-card treatment. */
+.trac-auth-page,.auth-shell{min-height:100vh;background:linear-gradient(90deg,rgba(11,15,58,.04) 0%,rgba(12,20,75,.10) 49%,rgba(10,18,70,.24) 100%),url('/assets/twilight-mountain-auth.png') center/cover no-repeat}
+.auth-art{background:none}
+.trac-auth-card,.auth-card{background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.55);box-shadow:0 24px 64px rgba(8,16,69,.28);backdrop-filter:blur(16px)}
+
 /* Match compact reference cards and list search/progress behavior */
+.auth-art{background-image:url('/assets/twilight-mountain-auth.png');background-position:center;background-size:cover}
 .auth-card{width:min(100%,410px);padding:20px 30px 24px}.auth-pane{padding-right:clamp(32px,8vw,150px)}.auth-art:before{background:linear-gradient(90deg,rgba(255,255,255,.57) 0%,rgba(255,255,255,.23) 38%,rgba(235,244,255,.03) 64%,rgba(235,244,255,.16) 100%)}.auth-art>div{width:400px}.auth-art h1{font-size:clamp(48px,3.7vw,58px);margin-top:58px}.register-card{width:min(100%,420px);padding:16px 30px 18px;max-height:calc(100vh - 24px)}.register-card .tabs{margin-bottom:10px}.register-card h2{font-size:24px}.register-card>p{font-size:13px;margin-bottom:7px}.register-card .lab{font-size:12px;margin-top:6px}.register-card .field{height:40px;margin:4px 0}.register-card .terms{font-size:12px;margin:7px 0}.register-card .btn.primary{height:42px}.register-card .center{font-size:12px!important;margin-top:9px!important}.summary{align-items:flex-end;gap:18px}.summary>div{flex:1;min-width:0}.summary .wide{width:100%;margin:8px 0 0;height:8px}.list-filter-actions{display:flex;align-items:center;gap:10px;flex:none}.task-search{height:40px;width:250px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#71809a}.task-search svg{width:17px;height:17px;flex:none}.task-search input{min-width:0;width:100%;border:0;outline:0;background:transparent;font-size:14px;color:var(--ink)}.list-filter-actions>button{height:40px;border:1px solid var(--line);border-radius:6px;padding:0 10px;font-size:13px;display:flex;align-items:center;gap:4px;background:#fff}.list-filter-actions>button svg{width:15px}.cards{grid-auto-rows:214px}.list-card{padding:18px}.list-card h3{font-size:18px}.list-card p,.list-card small{font-size:14px}.list-card footer{margin-top:15px}.list-card footer em{font-size:12px}.cards .list-card:nth-child(n+4){margin-top:2px}
 @media(max-width:900px){.task-search{width:190px}.list-filter-actions{gap:7px}}@media(max-width:700px){.auth-pane{padding:18px}.auth-card,.register-card{width:100%;max-width:430px}.auth-art>div{width:calc(100% - 48px)}.summary{display:block}.summary .wide{width:100%}.list-filter-actions{margin-top:12px}.task-search{width:100%;flex:1}.cards{grid-auto-rows:200px}.list-card h3{font-size:16px}.list-card p,.list-card small{font-size:13px}}
