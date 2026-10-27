@@ -3,16 +3,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function owns(list) { return signedIn() && list.ownerId == request.auth.uid; }
+    function isMember(list) { return signedIn() && request.auth.uid in list.memberIds; }
     function access(list) { return list.memberAccess[request.auth.uid]; }
-    function canRead(list) { return owns(list) || access(list) in ['all', 'edit', 'read']; }
-    function canWrite(list) { return owns(list) || access(list) in ['all', 'edit']; }
-    function canDelete(list) { return owns(list) || access(list) == 'all'; }
+    function canRead(list) { return owns(list) || isMember(list); }
+    function canEditTasks(list) { return owns(list) || access(list) == 'edit'; }
     function validPrivateList(data) {
       return data.ownerId == request.auth.uid
         && data.memberIds.size() == 1
         && data.memberIds[0] == request.auth.uid
         && data.memberRoles[request.auth.uid] == 'owner'
-        && data.memberAccess[request.auth.uid] == 'all';
+        && data.memberAccess.size() == 0;
     }
     match /users/{userId} {
       allow read: if signedIn();
@@ -22,12 +22,11 @@ service cloud.firestore {
     match /lists/{listId} {
       allow create: if signedIn() && validPrivateList(request.resource.data);
       allow read: if canRead(resource.data);
-      allow update: if canWrite(resource.data);
+      allow update: if owns(resource.data);
       allow delete: if owns(resource.data);
       match /tasks/{taskId} {
         allow read: if canRead(get(/databases/$(database)/documents/lists/$(listId)).data);
-        allow create, update: if canWrite(get(/databases/$(database)/documents/lists/$(listId)).data);
-        allow delete: if canDelete(get(/databases/$(database)/documents/lists/$(listId)).data);
+        allow create, update, delete: if canEditTasks(get(/databases/$(database)/documents/lists/$(listId)).data);
       }
     }
   }

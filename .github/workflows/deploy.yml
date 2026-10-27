@@ -1,0 +1,77 @@
+name: Deploy production site
+
+on:
+  push:
+    branches:
+      - prod
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-trac-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and deploy to Hostinger
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://trac.lazytechie.in
+    env:
+      VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+      HOSTINGER_SFTP_HOST: ${{ secrets.HOSTINGER_SFTP_HOST }}
+      HOSTINGER_SFTP_PORT: ${{ secrets.HOSTINGER_SFTP_PORT }}
+      HOSTINGER_SFTP_USERNAME: ${{ secrets.HOSTINGER_SFTP_USERNAME }}
+      HOSTINGER_SFTP_PASSWORD: ${{ secrets.HOSTINGER_SFTP_PASSWORD }}
+      HOSTINGER_REMOTE_DIR: ${{ secrets.HOSTINGER_REMOTE_DIR }}
+      HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+
+    steps:
+      - name: Check out production source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Retrieve and verify the Hostinger host key
+        run: |
+          test -n "$HOSTINGER_SSH_FINGERPRINT"
+          install -d -m 700 ~/.ssh
+          ssh-keyscan -p "$HOSTINGER_SFTP_PORT" -t ed25519 "$HOSTINGER_SFTP_HOST" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ACTUAL_FINGERPRINT="$(ssh-keygen -lf ~/.ssh/known_hosts -E sha256 | awk '{print $2}')"
+          test "$ACTUAL_FINGERPRINT" = "$HOSTINGER_SSH_FINGERPRINT"
+
+      - name: Upload static bundle via SFTP
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes lftp
+          lftp -u "$HOSTINGER_SFTP_USERNAME","$HOSTINGER_SFTP_PASSWORD" \
+            "sftp://${HOSTINGER_SFTP_HOST}:${HOSTINGER_SFTP_PORT}" <<EOF
+          set cmd:fail-exit true
+          set net:max-retries 2
+          set sftp:connect-program "ssh -a -x -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes"
+          mirror --reverse --delete --verbose ./dist/ "$HOSTINGER_REMOTE_DIR"
+          bye
+          EOF
+
+      - name: Verify production site
+        run: curl --fail --show-error --silent --retry 5 --retry-all-errors --max-time 20 https://trac.lazytechie.in/
