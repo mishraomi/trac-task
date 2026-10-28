@@ -253,12 +253,19 @@ select:focus-visible {
   display: grid;
 }
 .social button {
+  display: flex;
   min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--paper);
   font-size: 1.1rem;
   font-weight: 800;
+}
+.social button b {
+  font-size: 1.15rem;
 }
 .auth-message,
 .form-error {
@@ -281,6 +288,9 @@ select:focus-visible {
   min-height: 100dvh;
   padding-left: 220px;
   background: var(--wash);
+}
+.top-brand {
+  display: none;
 }
 .side {
   position: fixed;
@@ -512,6 +522,7 @@ select:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.6rem;
 }
 .list-card > div:first-child span {
   font-size: 1.6rem;
@@ -521,11 +532,45 @@ select:focus-visible {
   height: 20px;
   color: var(--muted);
 }
-.list-card h3 {
-  margin: 1.1rem 0 0.25rem;
+.list-card-delete {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--danger);
+}
+.list-card-delete:hover {
+  background: #fff0f2;
+}
+.list-card > div:first-child .list-card-delete svg {
+  color: var(--danger);
+}
+.list-card-open {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.list-card-title {
+  min-width: 0;
+  flex: 1;
+  padding: 0.45rem 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
   font:
     700 1.05rem Outfit,
     sans-serif;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .list-card p,
 .list-card small {
@@ -647,6 +692,18 @@ select:focus-visible {
   background: var(--violet-wash);
   color: var(--violet);
 }
+.task-actions {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+}
+.task-delete {
+  color: var(--danger);
+}
+.task-delete:hover {
+  background: #fff0f2;
+  color: var(--danger);
+}
 .list-actions svg,
 .task-menu svg {
   width: 19px;
@@ -697,25 +754,57 @@ select:focus-visible {
   justify-content: flex-end;
   gap: 0.65rem;
 }
-.sort-control {
-  display: flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 700;
-  white-space: nowrap;
+.sort-menu {
+  position: relative;
+  flex: none;
 }
-.sort-control select {
-  min-height: 44px;
-  max-width: 190px;
-  padding: 0 0.55rem;
+.sort-toggle {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--paper);
+  color: var(--muted);
+}
+.sort-toggle:hover,
+.sort-toggle[aria-expanded="true"] {
+  border-color: var(--violet);
+  background: var(--violet-wash);
+  color: var(--violet);
+}
+.sort-toggle svg {
+  width: 19px;
+  height: 19px;
+}
+.sort-options {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  display: grid;
+  width: max-content;
+  min-width: 205px;
+  padding: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 12px 28px rgb(28 44 77/0.16);
+}
+.sort-options button {
+  min-height: 40px;
+  padding: 0 0.65rem;
+  border-radius: 6px;
+  background: transparent;
   color: var(--ink);
-  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: left;
+}
+.sort-options button:hover,
+.sort-options button.on {
+  background: var(--violet-wash);
+  color: var(--violet);
 }
 .add {
   display: flex;
@@ -745,12 +834,8 @@ select:focus-visible {
   gap: 0.5rem;
   flex: none;
 }
-.add-field-label {
-  flex: none;
-  color: var(--muted);
-  font-size: 0.825rem;
-  font-weight: 700;
-  white-space: nowrap;
+.add-date {
+  position: relative;
 }
 .add-select select,
 .add-date input {
@@ -767,6 +852,19 @@ select:focus-visible {
 .add-date input {
   width: 148px;
   padding: 0 0.45rem;
+}
+.add-date input.date-empty {
+  color: transparent;
+}
+.date-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 0.65rem;
+  z-index: 1;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 .sr-only {
   position: absolute;
@@ -1264,8 +1362,15 @@ select:focus-visible {
     padding: 1.15rem;
   }
   .shell {
+    height: 100dvh;
     padding-left: 0;
-    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    overflow: hidden;
+  }
+  .shell > main {
+    height: 100%;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
   }
   .side {
     display: none;
@@ -1273,7 +1378,21 @@ select:focus-visible {
   .top {
     left: 0;
     height: 60px;
+    justify-content: space-between;
     padding-inline: 1rem;
+  }
+  .top-brand {
+    display: block;
+  }
+  .top-brand .brand {
+    gap: 0.45rem;
+  }
+  .top-brand .brand i {
+    width: 30px;
+    height: 30px;
+  }
+  .top-brand .brand b {
+    font-size: 1.1rem;
   }
   .top > div:last-child > button:first-child {
     display: none;
@@ -1341,13 +1460,9 @@ select:focus-visible {
   }
   .task-toolbar {
     align-items: stretch;
-    flex-direction: column;
+    flex-direction: row;
   }
-  .sort-control {
-    justify-content: space-between;
-  }
-  .sort-control select {
-    max-width: none;
+  .task-toolbar .task-search {
     flex: 1;
   }
   .add {
@@ -1362,7 +1477,8 @@ select:focus-visible {
   }
   .add-select,
   .add-date {
-    flex: 1 1 130px;
+    min-width: 0;
+    flex: 1 1 calc(50% - 0.4rem);
     align-items: center;
   }
   .add-select select,
@@ -1418,6 +1534,11 @@ select:focus-visible {
     width: 40px;
     height: 40px;
   }
+  .task-actions {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    align-self: center;
+  }
   .task-priority,
   .task-date {
     display: inline-flex;
@@ -1436,7 +1557,7 @@ select:focus-visible {
     grid-column: 2;
   }
   .task-date {
-    grid-column: 2/-1;
+    grid-column: 2;
   }
   .members-view {
     padding-top: 1rem;
