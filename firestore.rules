@@ -7,6 +7,22 @@ service cloud.firestore {
     function access(list) { return list.memberAccess[request.auth.uid]; }
     function canRead(list) { return owns(list) || isMember(list); }
     function canEditTasks(list) { return owns(list) || access(list) == 'edit'; }
+    function validAuditEvent(data) {
+      return data.keys().hasAll([
+          'taskId', 'taskTitle', 'action', 'actorId', 'actorName', 'occurredAt', 'changes'
+        ])
+        && data.keys().hasOnly([
+          'taskId', 'taskTitle', 'action', 'actorId', 'actorName', 'occurredAt', 'changes'
+        ])
+        && data.taskId is string
+        && data.taskTitle is string
+        && data.action in ['created', 'updated', 'completed', 'reopened', 'deleted']
+        && data.actorId == request.auth.uid
+        && data.actorName is string
+        && data.occurredAt is timestamp
+        && data.occurredAt == request.time
+        && data.changes is list;
+    }
     function validPrivateList(data) {
       return data.ownerId == request.auth.uid
         && data.memberIds.size() == 1
@@ -27,6 +43,12 @@ service cloud.firestore {
       match /tasks/{taskId} {
         allow read: if canRead(get(/databases/$(database)/documents/lists/$(listId)).data);
         allow create, update, delete: if canEditTasks(get(/databases/$(database)/documents/lists/$(listId)).data);
+      }
+      match /auditEvents/{eventId} {
+        allow read: if canRead(get(/databases/$(database)/documents/lists/$(listId)).data);
+        allow create: if canEditTasks(get(/databases/$(database)/documents/lists/$(listId)).data)
+          && validAuditEvent(request.resource.data);
+        allow update, delete: if false;
       }
     }
   }
