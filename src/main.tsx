@@ -30,6 +30,7 @@ import {
 } from "firebase/auth";
 import {
   AlertTriangle,
+  ArrowDownUp,
   ArrowLeft,
   Bell,
   Check,
@@ -39,7 +40,7 @@ import {
   EyeOff,
   Home,
   Lock,
-  MoreVertical,
+  Pencil,
   Plus,
   Search,
   Trash2,
@@ -260,6 +261,9 @@ function Field({
     </label>
   );
 }
+// Keep email/password authentication ready for a later release without exposing it now.
+const EMAIL_PASSWORD_AUTH_ENABLED = false;
+
 function Auth() {
   const [reg, setReg] = useState(false),
     [email, setEmail] = useState(""),
@@ -317,56 +321,73 @@ function Auth() {
           className={"auth-card trac-auth-card " + (reg ? "register-card" : "")}
           onSubmit={submit}
         >
-          <div className="tabs">
-            <button
-              type="button"
-              className={!reg ? "active" : ""}
-              onClick={() => setReg(false)}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              className={reg ? "active" : ""}
-              onClick={() => setReg(true)}
-            >
-              Register
-            </button>
-          </div>
-          <h2>{reg ? "Create an account" : "Welcome back"}</h2>
+          {EMAIL_PASSWORD_AUTH_ENABLED && (
+            <div className="tabs">
+              <button
+                type="button"
+                className={!reg ? "active" : ""}
+                onClick={() => setReg(false)}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                className={reg ? "active" : ""}
+                onClick={() => setReg(true)}
+              >
+                Register
+              </button>
+            </div>
+          )}
+          <h2>
+            {EMAIL_PASSWORD_AUTH_ENABLED
+              ? reg
+                ? "Create an account"
+                : "Welcome back"
+              : "Welcome to Trac"}
+          </h2>
           <p>
-            {reg ? "Join Trac and start organizing." : "Login to your account"}
+            {EMAIL_PASSWORD_AUTH_ENABLED
+              ? reg
+                ? "Join Trac and start organizing."
+                : "Login to your account"
+              : "Sign in with Google to start organizing."}
           </p>
-          {reg && (
+          {EMAIL_PASSWORD_AUTH_ENABLED && reg && (
             <>
               <label className="lab">Full name</label>
               <Field value={full} set={setFull} placeholder="John Doe" />
             </>
           )}
-          <label className="lab">Email address</label>
-          <Field value={email} set={setEmail} placeholder="Email address" />
-          <label className="lab">Password</label>
-          <Field value={pass} set={setPass} placeholder="Password" password />
-          {reg && (
+          {EMAIL_PASSWORD_AUTH_ENABLED && (
             <>
-              <label className="lab">Confirm password</label>
-              <Field
-                value={confirm}
-                set={setConfirm}
-                placeholder="Confirm password"
-                password
-              />
+              <label className="lab">Email address</label>
+              <Field value={email} set={setEmail} placeholder="Email address" />
+              <label className="lab">Password</label>
+              <Field value={pass} set={setPass} placeholder="Password" password />
+              {reg && (
+                <>
+                  <label className="lab">Confirm password</label>
+                  <Field
+                    value={confirm}
+                    set={setConfirm}
+                    placeholder="Confirm password"
+                    password
+                  />
+                </>
+              )}
+              <button className="btn primary auth-submit" disabled={busy}>
+                {busy ? "Please waitâ€¦" : reg ? "Create account" : "Login"}
+              </button>
             </>
           )}
-          <button className="btn primary auth-submit" disabled={busy}>
-            {busy ? "Please wait…" : reg ? "Create account" : "Login"}
-          </button>
-          {!reg && (
+          {(!EMAIL_PASSWORD_AUTH_ENABLED || !reg) && (
             <>
-              <div className="or">or continue with</div>
+              {EMAIL_PASSWORD_AUTH_ENABLED && <div className="or">or continue with</div>}
               <div className="social">
                 <button type="button" onClick={google} disabled={busy}>
-                  G
+                  <b>G</b>
+                  <span>{busy ? "Signing in…" : "Continue with Google"}</span>
                 </button>
               </div>
             </>
@@ -410,7 +431,9 @@ function Top({ user }: { user: User }) {
   const [o, setO] = useState(false);
   return (
     <header className="top">
-      <div />
+      <div className="top-brand">
+        <Brand />
+      </div>
       <div>
         <button>
           <Bell />
@@ -474,7 +497,15 @@ function MobileNav({
     </>
   );
 }
-function Card({ list, open }: { list: ListDoc; open: () => void }) {
+function Card({
+  list,
+  open,
+  remove,
+}: {
+  list: ListDoc;
+  open: () => void;
+  remove?: () => void;
+}) {
   const [tasks, setTasks] = useState<TaskDoc[]>([]);
   useEffect(() => {
     if (!db) return;
@@ -484,36 +515,49 @@ function Card({ list, open }: { list: ListDoc; open: () => void }) {
   }, [list.id]);
   const done = tasks.filter((x) => x.status === "completed").length;
   return (
-    <button className="list-card" onClick={open}>
-      <div>
+    <article className="list-card">
+      <div className="list-card-header">
         <span>📋</span>
-        <MoreVertical />
-      </div>
-      <h3>{list.title}</h3>
-      <p>{list.description || "No description"}</p>
-      <div className="progress">
-        <i
-          style={{
-            width: (tasks.length ? (done / tasks.length) * 100 : 0) + "%",
-            background: "#18ba79",
-          }}
-        />
-      </div>
-      <small>
-        {done} of {tasks.length} tasks completed
-      </small>
-      <footer>
-        {shared(list) ? (
-          <span className="avatar-stack">
-            <Avatar n="Owner" small />
-            <Avatar n="Member" small />
-          </span>
-        ) : (
-          <span />
+        <button type="button" className="list-card-title" onClick={open}>
+          {list.title}
+        </button>
+        {remove && (
+          <button
+            type="button"
+            className="list-card-delete"
+            aria-label={`Delete ${list.title}`}
+            onClick={remove}
+          >
+            <Trash2 />
+          </button>
         )}
-        <em>{shared(list) ? "Shared" : "Private"}</em>
-      </footer>
-    </button>
+      </div>
+      <button type="button" className="list-card-open" onClick={open}>
+        <p>{list.description || "No description"}</p>
+        <div className="progress">
+          <i
+            style={{
+              width: (tasks.length ? (done / tasks.length) * 100 : 0) + "%",
+              background: "#18ba79",
+            }}
+          />
+        </div>
+        <small>
+          {done} of {tasks.length} tasks completed
+        </small>
+        <footer>
+          {shared(list) ? (
+            <span className="avatar-stack">
+              <Avatar n="Owner" small />
+              <Avatar n="Member" small />
+            </span>
+          ) : (
+            <span />
+          )}
+          <em>{shared(list) ? "Shared" : "Private"}</em>
+        </footer>
+      </button>
+    </article>
   );
 }
 function Dashboard({
@@ -521,11 +565,13 @@ function Dashboard({
   section,
   openList,
   create,
+  deleteList,
 }: {
   user: User;
   section: "mine" | "shared";
   openList: (x: string) => void;
   create: () => void;
+  deleteList: (list: ListDoc) => void;
 }) {
   const [lists, setLists] = useState<ListDoc[]>([]),
     [text, setText] = useState("");
@@ -585,7 +631,12 @@ function Dashboard({
       {shown.length ? (
         <div className="cards">
           {shown.map((x) => (
-            <Card key={x.id} list={x} open={() => openList(x.id)} />
+            <Card
+              key={x.id}
+              list={x}
+              open={() => openList(x.id)}
+              remove={x.ownerId === user.uid ? () => deleteList(x) : undefined}
+            />
           ))}
         </div>
       ) : (
@@ -677,13 +728,22 @@ function Row({
         {date(task.dueDate)}
       </span>
       {editable ? (
-        <button
-          className="task-menu"
-          aria-label={`Edit ${task.title}`}
-          onClick={() => open("editTask", task)}
-        >
-          <MoreVertical />
-        </button>
+        <div className="task-actions" aria-label={`Actions for ${task.title}`}>
+          <button
+            className="task-menu"
+            aria-label={`Edit ${task.title}`}
+            onClick={() => open("editTask", task)}
+          >
+            <Pencil />
+          </button>
+          <button
+            className="task-menu task-delete"
+            aria-label={`Delete ${task.title}`}
+            onClick={() => open("deleteTask", task)}
+          >
+            <Trash2 />
+          </button>
+        </div>
       ) : (
         <span />
       )}
@@ -888,7 +948,7 @@ function ListView({
   id: string;
   user: User;
   back: () => void;
-  open: (m: Modal, t?: TaskDoc) => void;
+  open: (m: Modal, t?: TaskDoc, selectedList?: ListDoc) => void;
 }) {
   const [list, setList] = useState<ListDoc | null>(null),
     [tasks, setTasks] = useState<TaskDoc[]>([]),
@@ -896,8 +956,9 @@ function ListView({
     [search, setSearch] = useState(""),
     [filter, setFilter] = useState<"all" | Status>("all"),
     [sort, setSort] = useState<TaskSort>("createdDesc"),
+    [sortOpen, setSortOpen] = useState(false),
     [newTask, setNewTask] = useState(""),
-    [newPriority, setNewPriority] = useState<Priority>("medium"),
+    [newPriority, setNewPriority] = useState<Priority | "">(""),
     [newDue, setNewDue] = useState("");
   useEffect(() => {
     if (!db) return;
@@ -959,7 +1020,7 @@ function ListView({
         title: newTask.trim(),
         description: "",
         status: "pending",
-        priority: newPriority,
+        priority: newPriority || "medium",
         dueDate: newDue
           ? Timestamp.fromDate(new Date(`${newDue}T12:00:00`))
           : null,
@@ -981,7 +1042,7 @@ function ListView({
         },
       });
       setNewTask("");
-      setNewPriority("medium");
+      setNewPriority("");
       setNewDue("");
     }
   }
@@ -1001,10 +1062,16 @@ function ListView({
         <div className="list-actions">
           {owner && (
             <>
-              <button title="List settings" onClick={() => open("settings")}>
+              <button
+                title="List settings"
+                onClick={() => open("settings", undefined, list)}
+              >
                 <Cog />
               </button>
-              <button title="Delete list" onClick={() => open("deleteList")}>
+              <button
+                title="Delete list"
+                onClick={() => open("deleteList", undefined, list)}
+              >
                 <Trash2 />
               </button>
             </>
@@ -1052,19 +1119,42 @@ function ListView({
                   placeholder="Search tasks..."
                 />
               </label>
-              <label className="sort-control">
-                <span>Sort by</span>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as TaskSort)}
+              <div className="sort-menu">
+                <button
+                  type="button"
+                  className="sort-toggle"
+                  aria-label="Sort tasks"
+                  aria-expanded={sortOpen}
+                  onClick={() => setSortOpen((open) => !open)}
                 >
-                  <option value="createdDesc">Date added: newest</option>
-                  <option value="createdAsc">Date added: oldest</option>
-                  <option value="updatedDesc">Last modified</option>
-                  <option value="dueAsc">Due date</option>
-                  <option value="priorityDesc">Priority: high to low</option>
-                </select>
-              </label>
+                  <ArrowDownUp />
+                </button>
+                {sortOpen && (
+                  <div className="sort-options" role="menu">
+                    {[
+                      ["createdDesc", "Date added: newest"],
+                      ["createdAsc", "Date added: oldest"],
+                      ["updatedDesc", "Last modified"],
+                      ["dueAsc", "Due date"],
+                      ["priorityDesc", "Priority: high to low"],
+                    ].map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={sort === value}
+                        className={sort === value ? "on" : ""}
+                        onClick={() => {
+                          setSort(value as TaskSort);
+                          setSortOpen(false);
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           {editable && (
@@ -1077,25 +1167,29 @@ function ListView({
                 onKeyDown={(e) => e.key === "Enter" && void add()}
               />
               <label className="add-select">
-                <span className="add-field-label">Priority</span>
                 <select
                   aria-label="Task priority"
                   value={newPriority}
                   onChange={(e) => setNewPriority(e.target.value as Priority)}
                 >
+                  <option value="" disabled>
+                    Priority
+                  </option>
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
                   <option value="low">Low</option>
                 </select>
               </label>
               <label className="add-date">
-                <span className="add-field-label">Due Date</span>
                 <input
+                  className={newDue ? "" : "date-empty"}
                   aria-label="Task due date"
                   type="date"
+                  title="Due Date"
                   value={newDue}
                   onChange={(e) => setNewDue(e.target.value)}
                 />
+                {!newDue && <span className="date-placeholder">Due Date</span>}
               </label>
               <Btn onClick={() => void add()}>
                 <Plus />
@@ -1512,8 +1606,9 @@ function App() {
     setTask(null);
     setList(null);
   };
-  const open = (m: Modal, t?: TaskDoc) => {
+  const open = (m: Modal, t?: TaskDoc, selectedList?: ListDoc) => {
     setTask(t || null);
+    if (selectedList) setList(selectedList);
     setMode(m);
   };
   const navigate = (nextSection: "mine" | "shared") => {
@@ -1530,6 +1625,7 @@ function App() {
             user={user}
             section={section}
             create={() => open("create")}
+            deleteList={(selectedList) => open("deleteList", undefined, selectedList)}
             openList={(x) => {
               setId(x);
               setView("list");
